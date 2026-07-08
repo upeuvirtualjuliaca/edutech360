@@ -5,6 +5,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  base: '/edutech360/',
   plugins: [
     tailwindcss(),
     vue(),
