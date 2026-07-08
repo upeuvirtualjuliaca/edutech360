@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --color-brand-navy: #0b1437;
+  --color-brand-blue: #0f2167;
+  --color-brand-mid: #1d4ed8;
+  --color-brand-cyan: #06b6d4;
+  --color-brand-cyan-light: #22d3ee;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  scroll-behavior: smooth;
+}
+
+#app {
+  height: 100%;
+}
+
+/* ─── Gradient text ────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #22d3ee 0%, #60a5fa 60%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Glass card ───────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(34, 211, 238, 0.35);
+  transform: translateY(-3px);
+}
+
+/* ─── Scrollbar ────────────────────────────────────── */
+.scrollbar-styled {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+.scrollbar-styled-light {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.2) transparent;
+}
+
+/* ───────────────────────────────────────────────────── */
+/*  KEYFRAMES                                           */
+/* ───────────────────────────────────────────────────── */
+
+/* Entrance: fade + rise */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* Entrance: slide from right */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+
+/* Card: subtle float */
+@keyframes float {
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-7px); }
+}
+
+/* Glow blob pulse */
+@keyframes pulsGlow {
+  0%, 100% { opacity: 0.35; transform: scale(1);    }
+  50%       { opacity: 0.60; transform: scale(1.08); }
+}
+
+/* Card top bar shimmer */
+@keyframes shimmerBar {
+  0%   { background-position: -300% center; }
+  100% { background-position:  300% center; }
+}
+
+/* Background gradient drift */
+@keyframes gradientDrift {
+  0%, 100% { background-position: 0%   60%; }
+  50%       { background-position: 100% 40%; }
+}
+
+/* Marquee derecho (contenido se mueve de izquierda a derecha) */
+@keyframes marqueeRight {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0%);   }
+}
+
+/* Carousel progress bar */
+@keyframes carouselProgress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+/* Button glow breathe */
+@keyframes glowBreathe {
+  0%, 100% { box-shadow: 0 4px 18px rgba(37,99,235,0.35), 0 0  0    rgba(6,182,212,0);    }
+  50%       { box-shadow: 0 6px 28px rgba(37,99,235,0.55), 0 0 22px rgba(6,182,212,0.22); }
+}
+
+/* ───────────────────────────────────────────────────── */
+/*  UTILITY CLASSES                                     */
+/* ───────────────────────────────────────────────────── */
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.65s ease-out both;
+}
+.animate-fade-in-up-d1 {
+  animation: fadeInUp 0.65s ease-out 0.12s both;
+}
+.animate-fade-in-up-d2 {
+  animation: fadeInUp 0.65s ease-out 0.24s both;
+}
+.animate-fade-in-up-d3 {
+  animation: fadeInUp 0.65s ease-out 0.36s both;
+}
+.animate-fade-in-up-d4 {
+  animation: fadeInUp 0.65s ease-out 0.50s both;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.70s ease-out 0.20s both;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-blob {
+  animation: pulsGlow 5s ease-in-out infinite;
+}
+.animate-blob-delay {
+  animation: pulsGlow 5s ease-in-out 2.5s infinite;
+}
+
+.animate-gradient-bg {
+  background-size: 220% 220%;
+  animation: gradientDrift 14s ease infinite;
+}
+
+/* Shimmer bar — applied to the top stripe of the registration card */
+.shimmer-bar {
+  background: linear-gradient(
+    90deg,
+    #1d4ed8 0%,
+    #0891b2 20%,
+    #e0f2fe 42%,
+    #7dd3fc 50%,
+    #e0f2fe 58%,
+    #0891b2 80%,
+    #1d4ed8 100%
+  );
+  background-size: 300% auto;
+  animation: shimmerBar 4s linear infinite;
+}
+
+/* Button primary glow */
+.btn-primary-glow {
+  animation: glowBreathe 2.8s ease-in-out infinite;
+}
