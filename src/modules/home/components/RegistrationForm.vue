@@ -12,6 +12,13 @@ const docente = ref<Docente | null>(null)
 const dniStatus = ref<DocenteLookupStatus>('idle')
 const submitStatus = ref<RegistrationStatus>('idle')
 
+// Modo manual (cuando el DNI no está en el padrón)
+const manualMode = ref(false)
+const manualNombres = ref('')
+const manualCampus = ref('')
+const manualFacultad = ref('')
+const manualEP = ref('')
+
 // Lookup automático al completar 8 dígitos
 watch(dni, async (val) => {
   const clean = val.replace(/\D/g, '')
@@ -19,9 +26,11 @@ watch(dni, async (val) => {
     dniStatus.value = 'idle'
     docente.value = null
     submitStatus.value = 'idle'
+    manualMode.value = false
     return
   }
   dniStatus.value = 'loading'
+  manualMode.value = false
   const result = await lookupDocenteByDni(clean)
   if (result) {
     docente.value = result
@@ -32,25 +41,65 @@ watch(dni, async (val) => {
   }
 })
 
+function enableManualMode() {
+  manualNombres.value = ''
+  manualCampus.value = ''
+  manualFacultad.value = ''
+  manualEP.value = ''
+  submitStatus.value = 'idle'
+  manualMode.value = true
+}
+
+function cancelManualMode() {
+  manualMode.value = false
+  submitStatus.value = 'idle'
+}
+
+const canSubmitManual = () =>
+  manualMode.value &&
+  manualNombres.value.trim().length > 0 &&
+  submitStatus.value !== 'loading'
+
 async function handleSubmit() {
-  if (!docente.value || dniStatus.value !== 'found') return
+  const isManual = manualMode.value
+  const isFound = dniStatus.value === 'found'
+
+  if (!isManual && (!docente.value || !isFound)) return
+  if (isManual && !manualNombres.value.trim()) return
+
   submitStatus.value = 'loading'
+
+  const cleanDni = dni.value.replace(/\D/g, '')
+
   try {
-    const alreadyRegistered = await checkRegistration(docente.value.dni)
+    const alreadyRegistered = await checkRegistration(cleanDni)
     if (alreadyRegistered) {
       submitStatus.value = 'already-registered'
       return
     }
-    await submitRegistration({
-      ...docente.value,
-      campus:              docente.value.campus              ?? '',
-      facultad:            docente.value.facultad            ?? '',
-      escuelaProfesional:  docente.value.escuelaProfesional  ?? '',
-    })
+
+    if (isManual) {
+      await submitRegistration({
+        dni: cleanDni,
+        apellidosNombres: manualNombres.value.trim(),
+        campus: manualCampus.value.trim(),
+        facultad: manualFacultad.value.trim(),
+        escuelaProfesional: manualEP.value.trim(),
+      })
+    } else {
+      await submitRegistration({
+        ...docente.value!,
+        campus: docente.value!.campus ?? '',
+        facultad: docente.value!.facultad ?? '',
+        escuelaProfesional: docente.value!.escuelaProfesional ?? '',
+      })
+    }
+
     submitStatus.value = 'success'
     dni.value = ''
     docente.value = null
     dniStatus.value = 'idle'
+    manualMode.value = false
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : ''
     submitStatus.value = msg === 'already-registered' ? 'already-registered' : 'error'
@@ -118,7 +167,7 @@ async function handleSubmit() {
               dniStatus === 'found'
                 ? 'border-emerald-400 bg-emerald-50/50 text-slate-800 ring-2 ring-emerald-400/15'
                 : dniStatus === 'not-found'
-                  ? 'border-red-300 bg-red-50/30 text-slate-800 ring-2 ring-red-300/15'
+                  ? 'border-amber-300 bg-amber-50/30 text-slate-800 ring-2 ring-amber-300/15'
                   : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15',
             ]"
           />
@@ -135,9 +184,9 @@ async function handleSubmit() {
               </svg>
             </div>
             <div v-else-if="dniStatus === 'not-found'"
-              class="w-5 h-5 rounded-full bg-red-400 flex items-center justify-center">
+              class="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center">
               <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z"/>
               </svg>
             </div>
           </div>
@@ -145,32 +194,79 @@ async function handleSubmit() {
         <p class="text-[11px] text-slate-400 mt-1">Al completar 8 dígitos, tus datos se rellenarán automáticamente.</p>
       </div>
 
-      <!-- Alert: not found -->
-      <AlertMessage
-        v-if="dniStatus === 'not-found'"
-        type="info"
-        title="DNI no encontrado"
-        message="No existe un docente con este DNI en el padrón. Verifica el número e inténtalo de nuevo."
-      />
+      <!-- DNI no encontrado: opción manual -->
+      <div v-if="dniStatus === 'not-found' && !manualMode"
+        class="rounded-xl border border-amber-200 bg-amber-50 p-4 flex flex-col gap-3">
+        <div class="flex items-start gap-2.5">
+          <svg class="w-4.5 h-4.5 text-amber-500 shrink-0 mt-px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z"/>
+          </svg>
+          <div>
+            <p class="text-xs font-semibold text-amber-800">DNI no encontrado en el padrón</p>
+            <p class="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
+              Si eres docente de reciente incorporación, puedes registrar tus datos manualmente.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          @click="enableManualMode"
+          class="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg
+                 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold
+                 transition-colors duration-200 cursor-pointer"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          Ingresar mis datos manualmente
+        </button>
+      </div>
 
-      <!-- Alert: ya inscrito -->
-      <AlertMessage
-        v-if="submitStatus === 'already-registered'"
-        type="warning"
-        title="Ya estás inscrito"
-        message="Este DNI ya tiene una inscripción registrada para el evento."
-      />
+      <!-- Modo manual: campos editables -->
+      <template v-if="manualMode">
+        <div class="rounded-xl border border-blue-200 bg-blue-50/60 px-4 py-3 flex items-start gap-2">
+          <svg class="w-4 h-4 text-blue-500 shrink-0 mt-px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p class="text-[11px] text-blue-700 leading-relaxed">
+            Completa tus datos. Solo <span class="font-semibold">Apellidos y Nombres</span> es obligatorio.
+          </p>
+        </div>
 
-      <!-- Alert: error -->
-      <AlertMessage
-        v-if="submitStatus === 'error'"
-        type="error"
-        title="Error al inscribirse"
-        message="Ocurrió un problema al procesar tu inscripción. Intenta nuevamente."
-      />
+        <div class="flex flex-col gap-3">
+          <BaseInput
+            label="Apellidos y Nombres *"
+            v-model="manualNombres"
+            placeholder="Ej: MAMANI QUISPE, Juan Carlos"
+          />
+          <BaseInput
+            label="Campus Adscrito"
+            v-model="manualCampus"
+            placeholder="Ej: Juliaca"
+          />
+          <BaseInput
+            label="Facultad Adscrita"
+            v-model="manualFacultad"
+            placeholder="Ej: Facultad de Ingeniería"
+          />
+          <BaseInput
+            label="Escuela Profesional"
+            v-model="manualEP"
+            placeholder="Ej: Ingeniería de Sistemas"
+          />
+        </div>
 
-      <!-- Campos autocompletados -->
-      <div class="flex flex-col gap-3">
+        <button
+          type="button"
+          @click="cancelManualMode"
+          class="text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer transition-colors text-center"
+        >
+          ← Cancelar y volver
+        </button>
+      </template>
+
+      <!-- Campos autocompletados (modo normal) -->
+      <div v-if="!manualMode" class="flex flex-col gap-3">
         <BaseInput
           label="Apellidos y Nombres"
           :model-value="docente?.apellidosNombres ?? ''"
@@ -197,14 +293,34 @@ async function handleSubmit() {
         />
       </div>
 
+      <!-- Alert: ya inscrito -->
+      <AlertMessage
+        v-if="submitStatus === 'already-registered'"
+        type="warning"
+        title="Ya estás inscrito"
+        message="Este DNI ya tiene una inscripción registrada para el evento."
+      />
+
+      <!-- Alert: error -->
+      <AlertMessage
+        v-if="submitStatus === 'error'"
+        type="error"
+        title="Error al inscribirse"
+        message="Ocurrió un problema al procesar tu inscripción. Intenta nuevamente."
+      />
+
       <!-- Submit -->
       <button
         type="button"
-        :disabled="dniStatus !== 'found' || submitStatus === 'loading'"
+        :disabled="
+          submitStatus === 'loading' ||
+          (!manualMode && dniStatus !== 'found') ||
+          (manualMode && !manualNombres.trim())
+        "
         :class="[
           'w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl',
           'text-sm font-semibold text-white transition-all duration-300',
-          dniStatus === 'found' && submitStatus !== 'loading'
+          (dniStatus === 'found' || canSubmitManual()) && submitStatus !== 'loading'
             ? 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 btn-primary-glow cursor-pointer active:scale-[0.98]'
             : 'bg-slate-200 text-slate-400 cursor-not-allowed',
         ]"
