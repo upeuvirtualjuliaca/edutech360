@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 import BaseInput from '@/components/base/BaseInput.vue'
 import AlertMessage from '@/components/feedback/AlertMessage.vue'
 import { lookupDocenteByDni } from '@/services/docentes'
@@ -19,27 +19,38 @@ const manualCampus = ref('')
 const manualFacultad = ref('')
 const manualEP = ref('')
 
-// Lookup automático al completar 8 dígitos
-watch(dni, async (val) => {
+// Lookup con debounce — soporta DNI (8 dígitos) y CE (9-12 dígitos)
+let lookupTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(dni, (val) => {
   const clean = val.replace(/\D/g, '')
-  if (clean.length !== 8) {
+
+  if (clean.length < 8) {
+    if (lookupTimer) clearTimeout(lookupTimer)
     dniStatus.value = 'idle'
     docente.value = null
     submitStatus.value = 'idle'
     manualMode.value = false
     return
   }
+
   dniStatus.value = 'loading'
   manualMode.value = false
-  const result = await lookupDocenteByDni(clean)
-  if (result) {
-    docente.value = result
-    dniStatus.value = 'found'
-  } else {
-    docente.value = null
-    dniStatus.value = 'not-found'
-  }
+
+  if (lookupTimer) clearTimeout(lookupTimer)
+  lookupTimer = setTimeout(async () => {
+    const result = await lookupDocenteByDni(clean)
+    if (result) {
+      docente.value = result
+      dniStatus.value = 'found'
+    } else {
+      docente.value = null
+      dniStatus.value = 'not-found'
+    }
+  }, 500)
 })
+
+onUnmounted(() => { if (lookupTimer) clearTimeout(lookupTimer) })
 
 function enableManualMode() {
   manualNombres.value = ''
@@ -159,8 +170,8 @@ async function handleSubmit() {
             v-model="dni"
             type="text"
             inputmode="numeric"
-            maxlength="8"
-            placeholder="Ej: 45678901"
+            maxlength="12"
+            placeholder="Ej: 45678901 o 001642136"
             :class="[
               'w-full pl-4 pr-11 py-3 rounded-xl border text-sm font-medium',
               'transition-all duration-200 outline-none',
@@ -191,7 +202,7 @@ async function handleSubmit() {
             </div>
           </div>
         </div>
-        <p class="text-[11px] text-slate-400 mt-1">Al completar 8 dígitos, tus datos se rellenarán automáticamente.</p>
+        <p class="text-[11px] text-slate-400 mt-1">Ingresa tu DNI (8 dígitos) o CE (hasta 12 dígitos). Los datos se rellenarán automáticamente.</p>
       </div>
 
       <!-- DNI no encontrado: opción manual -->
