@@ -2,6 +2,7 @@
 import { ref, provide } from 'vue'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import EventHero from '../components/EventHero.vue'
+import { useAudio } from '@/composables/useAudio'
 import VenueTimeline from '../components/VenueTimeline.vue'
 import RegistrationCard from '../components/RegistrationCard.vue'
 import BaseModal from '@/components/base/BaseModal.vue'
@@ -11,7 +12,19 @@ import TarapotoSection from '../components/TarapotoSection.vue'
 import AppFooter from '../components/AppFooter.vue'
 
 const showForm = ref(false)
-provide('openRegistrationForm', () => { showForm.value = true })
+provide('openRegistrationForm', openForm)
+
+const { play, stop } = useAudio()
+
+function openForm() {
+  play()
+  showForm.value = true
+}
+
+function closeForm() {
+  stop()
+  showForm.value = false
+}
 </script>
 
 <template>
@@ -52,7 +65,7 @@ provide('openRegistrationForm', () => { showForm.value = true })
 
           <!-- Columna izquierda — Hero -->
           <div class="flex flex-col justify-center">
-            <EventHero @open-form="showForm = true" />
+            <EventHero @open-form="openForm" />
           </div>
 
           <!-- Columna derecha — Sedes -->
@@ -94,7 +107,7 @@ provide('openRegistrationForm', () => { showForm.value = true })
     <AppFooter />
 
     <!-- Modal — formulario de inscripción -->
-    <BaseModal :open="showForm" @close="showForm = false">
+    <BaseModal :open="showForm" @close="closeForm">
       <RegistrationCard @close="showForm = false" />
     </BaseModal>
 

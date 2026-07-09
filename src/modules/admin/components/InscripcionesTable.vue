@@ -32,6 +32,7 @@ async function load() {
 }
 
 async function handleDelete(row: Record<string, string>) {
+  if (!row.id) return
   if (!confirm(`¿Eliminar la inscripción de ${row.apellidos_nombres}?\nEsta acción no se puede deshacer.`)) return
   deleting.value = row.id
   try {
@@ -134,7 +135,7 @@ async function exportPDF() {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
-function formatDate(iso: string) {
+function formatDate(iso: string | undefined) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('es-PE', {
     year: 'numeric', month: '2-digit', day: '2-digit',
@@ -299,7 +300,7 @@ onMounted(load)
               <td class="px-4 py-3 text-xs text-slate-500">{{ row.facultad || '—' }}</td>
               <td class="px-4 py-3 text-xs text-slate-500">{{ row.escuela_profesional || '—' }}</td>
               <td class="px-4 py-3 text-xs text-slate-500">{{ row.ciudad || '—' }}</td>
-              <td class="px-4 py-3 text-xs text-slate-400">{{ formatDate(row.created_at) }}</td>
+              <td class="px-4 py-3 text-xs text-slate-400">{{ formatDate(row['created_at']) }}</td>
               <td class="px-4 py-3 text-right">
                 <button
                   type="button"

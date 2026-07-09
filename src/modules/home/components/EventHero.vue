@@ -27,7 +27,7 @@ defineEmits<{ 'open-form': [] }>()
     <!-- Tagline -->
     <div class="animate-fade-in-up-d2">
       <p class="text-xl sm:text-2xl font-bold gradient-text italic leading-snug">
-        "{{ eventConfig.tagline }}"
+        "Pedagog<span class="font-black not-italic text-cyan-300 ml-0.5">IA</span> que Transforma"
       </p>
     </div>
 

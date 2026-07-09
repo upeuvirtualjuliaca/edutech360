@@ -22,7 +22,8 @@ export interface EventConfig {
 export const eventConfig: EventConfig = {
   edition: 'XXII Jornada Académica',
   name: 'EduTech360',
-  tagline: 'Pedagogía que Transforma',
+
+  tagline: 'PedagogIA que Transforma',
   description:
     'Espacio de innovación pedagógica para docentes universitarios comprometidos con transformar la educación superior en el Perú.',
   venues: [

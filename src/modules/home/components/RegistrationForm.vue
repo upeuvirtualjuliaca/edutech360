@@ -41,7 +41,12 @@ async function handleSubmit() {
       submitStatus.value = 'already-registered'
       return
     }
-    await submitRegistration(docente.value)
+    await submitRegistration({
+      ...docente.value,
+      campus:              docente.value.campus              ?? '',
+      facultad:            docente.value.facultad            ?? '',
+      escuelaProfesional:  docente.value.escuelaProfesional  ?? '',
+    })
     submitStatus.value = 'success'
     dni.value = ''
     docente.value = null

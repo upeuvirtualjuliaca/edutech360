@@ -123,7 +123,7 @@ const openRegistrationForm = inject<() => void>('openRegistrationForm', () => { 
           © 2026 Universidad Peruana Unión. Todos los derechos reservados.
         </p>
         <p class="text-xs text-slate-700 text-center">
-          EduTech360 · <span class="text-slate-600">Pedagogía que Transforma</span>
+          EduTech360 · <span class="text-slate-600">Pedagog<span class="font-black text-cyan-500 ml-0.5">IA</span> que Transforma</span>
         </p>
       </div>
 

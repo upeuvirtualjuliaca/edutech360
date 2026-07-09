@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>EduTech360</title>
+  <script>
+    // SPA redirect para GitHub Pages
+    var l = window.location;
+    // Extrae solo los segmentos de ruta después del repo (/edutech360/)
+    var path = l.pathname.split('/').slice(2).join('/');
+    var query = l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '';
+    l.replace(
+      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      '/' + l.pathname.split('/')[1] +
+      '/?p=' + path.replace(/&/g, '~and~') + query + l.hash
+    );
+  </script>
+</head>
+<body></body>
+</html>
