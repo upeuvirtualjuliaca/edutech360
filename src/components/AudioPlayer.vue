@@ -2,6 +2,8 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAudio } from '@/composables/useAudio'
 
+const base = import.meta.env.BASE_URL
+
 const { playing, register } = useAudio()
 const audio = ref<HTMLAudioElement | null>(null)
 
@@ -36,7 +38,7 @@ onUnmounted(() => {
 <template>
   <audio
     ref="audio"
-    src="/audio/alexzavesa-calm-elegant-logo-519008.mp3"
+    :src="`${base}audio/alexzavesa-calm-elegant-logo-519008.mp3`"
     preload="auto"
   />
 </template>
