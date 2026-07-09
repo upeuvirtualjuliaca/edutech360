@@ -112,7 +112,7 @@ const totalPages = () => Math.ceil(total.value / PAGE_SIZE)
                   :disabled="deleting === row.id"
                   class="opacity-0 group-hover:opacity-100 transition-opacity
                          p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 cursor-pointer"
-                  @click="handleDelete(row.id)"
+                  @click="handleDelete(row.id as string)"
                 >
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round"

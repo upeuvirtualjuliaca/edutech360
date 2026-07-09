@@ -1,7 +1,8 @@
-import { supabase } from './supabase'
+import { supabase, supabaseReady } from './supabase'
 import type { Registration } from '@/types/registration'
 
 export async function submitRegistration(data: Omit<Registration, 'id' | 'createdAt'>): Promise<void> {
+  if (!supabaseReady) throw new Error('Supabase no configurado')
   const { error } = await supabase.from('registrations').insert({
     dni: data.dni.trim(),
     apellidos_nombres: data.apellidosNombres,
@@ -18,6 +19,7 @@ export async function submitRegistration(data: Omit<Registration, 'id' | 'create
 }
 
 export async function checkRegistration(dni: string): Promise<boolean> {
+  if (!supabaseReady) return false
   const { data, error } = await supabase
     .from('registrations')
     .select('id')

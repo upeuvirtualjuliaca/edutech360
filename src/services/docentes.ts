@@ -1,7 +1,8 @@
-import { supabase } from './supabase'
+import { supabase, supabaseReady } from './supabase'
 import type { Docente } from '@/types/docente'
 
 export async function lookupDocenteByDni(dni: string): Promise<Docente | null> {
+  if (!supabaseReady) return null
   const { data, error } = await supabase
     .from('docentes')
     .select('dni, apellidos_nombres, campus, facultad, escuela_profesional')
@@ -20,6 +21,7 @@ export async function lookupDocenteByDni(dni: string): Promise<Docente | null> {
 }
 
 export async function importDocentes(docentes: Docente[]): Promise<{ count: number; errors: number }> {
+  if (!supabaseReady) throw new Error('Supabase no configurado')
   const rows = docentes.map((d) => ({
     dni: d.dni.trim(),
     apellidos_nombres: d.apellidosNombres.trim(),
@@ -39,6 +41,7 @@ export async function importDocentes(docentes: Docente[]): Promise<{ count: numb
 }
 
 export async function getDocentes(page = 1, pageSize = 50, search = '') {
+  if (!supabaseReady) return { data: [], total: 0 }
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 

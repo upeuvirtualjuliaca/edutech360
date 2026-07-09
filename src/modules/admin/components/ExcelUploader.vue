@@ -37,7 +37,7 @@ function normalizeKey(key: string): string {
 }
 
 function parseSheet(workbook: XLSX.WorkBook): Docente[] {
-  const sheet = workbook.Sheets[workbook.SheetNames[0]]
+  const sheet = workbook.Sheets[workbook.SheetNames[0]!]!
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' })
 
   return rows
