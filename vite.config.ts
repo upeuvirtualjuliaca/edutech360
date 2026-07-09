@@ -4,8 +4,8 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 
-export default defineConfig({
-  base: '/edutech360/',
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/edutech360/' : '/',
   plugins: [
     tailwindcss(),
     vue(),
@@ -16,4 +16,4 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-})
+}))
