@@ -20,32 +20,32 @@ export interface EventConfig {
 }
 
 export const eventConfig: EventConfig = {
-  edition: 'XXI Jornada Académica',
+  edition: 'XXII Jornada Académica',
   name: 'EduTech360',
   tagline: 'Pedagogía que Transforma',
   description:
     'Espacio de innovación pedagógica para docentes universitarios comprometidos con transformar la educación superior en el Perú.',
   venues: [
     {
-      city: 'Lima',
+      city: 'Juliaca',
       date: '20 de julio de 2026',
       dateShort: '20 Jul',
       month: 'Jul',
       day: '20',
-      venue: 'Auditorio Alva & Alva',
+      venue: 'Auditorio Fernando Stahl',
       time: '7:30 a.m.',
-      region: 'Costa',
+      region: 'Altiplano',
       targetDate: '2026-07-20T07:30:00-05:00',
     },
     {
-      city: 'Juliaca',
+      city: 'Lima',
       date: '22 de julio de 2026',
       dateShort: '22 Jul',
       month: 'Jul',
       day: '22',
-      venue: 'Auditorio Fernando Stahl',
+      venue: 'Auditorio Alva & Alva',
       time: '7:30 a.m.',
-      region: 'Altiplano',
+      region: 'Costa',
       targetDate: '2026-07-22T07:30:00-05:00',
     },
     {

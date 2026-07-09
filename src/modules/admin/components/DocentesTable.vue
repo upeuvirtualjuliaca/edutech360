@@ -81,8 +81,8 @@ const totalPages = () => Math.ceil(total.value / PAGE_SIZE)
               <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">DNI/CE</th>
               <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[200px]">Apellidos y Nombres</th>
               <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Campus</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Facultad</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[160px]">Escuela</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[140px]">Facultad / EPG</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[140px]">EP</th>
               <th class="px-4 py-3"></th>
             </tr>
           </thead>
@@ -103,9 +103,9 @@ const totalPages = () => Math.ceil(total.value / PAGE_SIZE)
             <tr v-for="row in rows" :key="row.id" class="hover:bg-slate-50 group">
               <td class="px-4 py-3 font-mono font-semibold text-slate-700 text-sm">{{ row.dni }}</td>
               <td class="px-4 py-3 text-slate-800 font-medium">{{ row.apellidos_nombres }}</td>
-              <td class="px-4 py-3 text-slate-500 text-xs">{{ row.campus }}</td>
-              <td class="px-4 py-3 text-slate-500 text-xs">{{ row.facultad }}</td>
-              <td class="px-4 py-3 text-slate-500 text-xs">{{ row.escuela_profesional }}</td>
+              <td class="px-4 py-3 text-slate-500 text-xs">{{ row.campus || '—' }}</td>
+              <td class="px-4 py-3 text-slate-500 text-xs">{{ row.facultad || '—' }}</td>
+              <td class="px-4 py-3 text-slate-500 text-xs">{{ row.escuela_profesional || '—' }}</td>
               <td class="px-4 py-3 text-right">
                 <button
                   type="button"

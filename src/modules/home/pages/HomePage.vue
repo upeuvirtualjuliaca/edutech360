@@ -81,11 +81,11 @@ provide('openRegistrationForm', () => { showForm.value = true })
     </section>
     <!-- ══ / Sección 1 ═════════════════════════════════════════════════ -->
 
-    <!-- ══ Sección 2 — Sede Lima ══════════════════════════════════════ -->
-    <LimaSection />
-
-    <!-- ══ Sección 3 — Sede Juliaca ════════════════════════════════════ -->
+    <!-- ══ Sección 2 — Sede Juliaca ════════════════════════════════════ -->
     <JuliacaSection />
+
+    <!-- ══ Sección 3 — Sede Lima ══════════════════════════════════════ -->
+    <LimaSection />
 
     <!-- ══ Sección 4 — Sede Tarapoto ═══════════════════════════════════ -->
     <TarapotoSection />

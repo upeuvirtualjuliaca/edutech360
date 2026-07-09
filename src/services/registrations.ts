@@ -51,3 +51,18 @@ export async function getRegistrations(page = 1, pageSize = 50, search = '') {
 
   return { data: data ?? [], total: count ?? 0 }
 }
+
+export async function getAllRegistrations() {
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error(error.message)
+  return data ?? []
+}
+
+export async function deleteRegistration(id: string): Promise<void> {
+  const { error } = await supabase.from('registrations').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}

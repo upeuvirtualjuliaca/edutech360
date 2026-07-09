@@ -13,32 +13,57 @@ const importing = ref(false)
 const importResult = ref<{ count: number } | null>(null)
 const importError = ref<string | null>(null)
 
-// Mapeo flexible de columnas del Excel → campos internos
-const COL_MAP: Record<string, keyof Docente> = {
-  'dni': 'dni',
-  'ce': 'dni',
-  'doc': 'dni',
-  'documento': 'dni',
-  'apellidos y nombres': 'apellidosNombres',
-  'apellidos_nombres': 'apellidosNombres',
-  'nombre': 'apellidosNombres',
-  'nombres': 'apellidosNombres',
-  'campus': 'campus',
-  'sede': 'campus',
-  'facultad': 'facultad',
-  'escuela': 'escuelaProfesional',
-  'escuela profesional': 'escuelaProfesional',
-  'escuela_profesional': 'escuelaProfesional',
-  'carrera': 'escuelaProfesional',
+// Normaliza encabezados: minúsculas, sin tildes, sin °, espacios simples
+function normalizeKey(key: string): string {
+  return key
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[°º#]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
-function normalizeKey(key: string): string {
-  return key.toLowerCase().trim().replace(/\s+/g, ' ')
+// Solo los campos necesarios para el formulario de inscripción
+const COL_MAP: Record<string, keyof Docente> = {
+  // DNI / CE
+  'n dni / ce':                               'dni',
+  'dni / ce':                                 'dni',
+  'dni':                                      'dni',
+  'ce':                                       'dni',
+  'documento':                                'dni',
+
+  // Nombre
+  'apellidos y nombres':                      'apellidosNombres',
+  'apellidos_nombres':                        'apellidosNombres',
+  'nombres':                                  'apellidosNombres',
+
+  // Campus del docente
+  'campus (adscripcion del docente)':         'campus',
+  'campus adscripcion del docente':           'campus',
+  'campus':                                   'campus',
+  'sede':                                     'campus',
+
+  // Facultad del docente
+  'facultad / epg (adscripcion del docente)': 'facultad',
+  'facultad / epg':                           'facultad',
+  'facultad':                                 'facultad',
+
+  // Escuela profesional (EP de la asignatura como mejor aproximación)
+  'ep (adscripcion de la asignatura)':        'escuelaProfesional',
+  'ep adscripcion de la asignatura':          'escuelaProfesional',
+  'ep':                                       'escuelaProfesional',
+  'escuela profesional':                      'escuelaProfesional',
+  'escuela':                                  'escuelaProfesional',
+  'carrera':                                  'escuelaProfesional',
 }
 
 function parseSheet(workbook: XLSX.WorkBook): Docente[] {
   const sheet = workbook.Sheets[workbook.SheetNames[0]!]!
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' })
+
+  const seen = new Set<string>()
 
   return rows
     .map((row) => {
@@ -50,7 +75,12 @@ function parseSheet(workbook: XLSX.WorkBook): Docente[] {
       }
       return docente as Docente
     })
-    .filter((d) => d.dni && d.apellidosNombres)
+    .filter((d) => {
+      if (!d.dni || !d.apellidosNombres) return false
+      if (seen.has(d.dni)) return false
+      seen.add(d.dni)
+      return true
+    })
 }
 
 function handleFile(file: File) {
@@ -132,17 +162,24 @@ async function confirmImport() {
         <input type="file" accept=".xlsx,.xls" class="hidden" @change="onFileInput" />
       </label>
 
-      <!-- Instrucciones de columnas -->
+      <!-- Columnas que se extraen del Excel -->
       <div class="mt-4 rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
-        <p class="text-xs font-semibold text-blue-700 mb-1.5">Columnas esperadas en el Excel:</p>
-        <div class="flex flex-wrap gap-1.5">
-          <span v-for="col in ['DNI / CE', 'Apellidos y Nombres', 'Campus', 'Facultad', 'Escuela Profesional']"
-            :key="col"
-            class="px-2 py-0.5 rounded-md bg-white border border-blue-200 text-[11px] font-medium text-blue-600">
+        <p class="text-xs font-semibold text-blue-700 mb-2">Campos que se extraen del padrón:</p>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="col in [
+            'N° DNI / CE',
+            'Apellidos y nombres',
+            'Campus (Adscripción del docente)',
+            'Facultad / EPG (Adscripción del docente)',
+            'EP (Adscripción de la asignatura)',
+          ]" :key="col"
+            class="px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-[11px] font-medium text-blue-600">
             {{ col }}
           </span>
         </div>
-        <p class="text-[11px] text-blue-400 mt-2">Los encabezados no son sensibles a mayúsculas ni tildes.</p>
+        <p class="text-[11px] text-blue-400 mt-2">
+          El resto de columnas del Excel son ignoradas. Si un docente aparece varias veces se conserva el último registro.
+        </p>
       </div>
     </div>
 
@@ -152,7 +189,7 @@ async function confirmImport() {
         <div>
           <p class="text-sm font-bold text-slate-800">Vista previa — {{ fileName }}</p>
           <p class="text-xs text-slate-500 mt-0.5">
-            <span class="font-semibold text-blue-600">{{ preview.length }}</span> docentes listos para importar
+            <span class="font-semibold text-blue-600">{{ preview.length }}</span> docentes únicos listos para importar
           </p>
         </div>
         <button type="button"
@@ -162,7 +199,7 @@ async function confirmImport() {
         </button>
       </div>
 
-      <!-- Tabla preview (máx 8 filas) -->
+      <!-- Tabla preview -->
       <div class="rounded-xl border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-xs">
@@ -170,20 +207,20 @@ async function confirmImport() {
               <tr class="bg-slate-50 border-b border-slate-200">
                 <th class="text-left px-3 py-2.5 font-semibold text-slate-500 uppercase tracking-wider">#</th>
                 <th class="text-left px-3 py-2.5 font-semibold text-slate-500 uppercase tracking-wider">DNI/CE</th>
-                <th class="text-left px-3 py-2.5 font-semibold text-slate-500 uppercase tracking-wider min-w-[180px]">Apellidos y Nombres</th>
+                <th class="text-left px-3 py-2.5 font-semibold text-slate-500 uppercase tracking-wider min-w-[200px]">Apellidos y Nombres</th>
                 <th class="text-left px-3 py-2.5 font-semibold text-slate-500 uppercase tracking-wider">Campus</th>
-                <th class="text-left px-3 py-2.5 font-semibold text-slate-500 uppercase tracking-wider">Facultad</th>
-                <th class="text-left px-3 py-2.5 font-semibold text-slate-500 uppercase tracking-wider min-w-[140px]">Escuela</th>
+                <th class="text-left px-3 py-2.5 font-semibold text-slate-500 uppercase tracking-wider min-w-[140px]">Facultad/EPG</th>
+                <th class="text-left px-3 py-2.5 font-semibold text-slate-500 uppercase tracking-wider min-w-[140px]">EP</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
               <tr v-for="(d, i) in preview.slice(0, 8)" :key="i" class="hover:bg-slate-50">
                 <td class="px-3 py-2 text-slate-400">{{ i + 1 }}</td>
                 <td class="px-3 py-2 font-mono font-semibold text-slate-700">{{ d.dni }}</td>
-                <td class="px-3 py-2 text-slate-700">{{ d.apellidosNombres }}</td>
-                <td class="px-3 py-2 text-slate-500">{{ d.campus }}</td>
-                <td class="px-3 py-2 text-slate-500">{{ d.facultad }}</td>
-                <td class="px-3 py-2 text-slate-500">{{ d.escuelaProfesional }}</td>
+                <td class="px-3 py-2 text-slate-700 font-medium">{{ d.apellidosNombres }}</td>
+                <td class="px-3 py-2 text-slate-500">{{ d.campus || '—' }}</td>
+                <td class="px-3 py-2 text-slate-500">{{ d.facultad || '—' }}</td>
+                <td class="px-3 py-2 text-slate-500">{{ d.escuelaProfesional || '—' }}</td>
               </tr>
             </tbody>
           </table>
@@ -217,7 +254,7 @@ async function confirmImport() {
       </button>
     </div>
 
-    <!-- Resultado importación -->
+    <!-- Resultado -->
     <div v-if="importResult"
       class="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200">
       <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">

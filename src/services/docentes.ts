@@ -7,6 +7,7 @@ export async function lookupDocenteByDni(dni: string): Promise<Docente | null> {
     .from('docentes')
     .select('dni, apellidos_nombres, campus, facultad, escuela_profesional')
     .eq('dni', dni.trim())
+    .limit(1)
     .single()
 
   if (error || !data) return null
@@ -20,24 +21,42 @@ export async function lookupDocenteByDni(dni: string): Promise<Docente | null> {
   }
 }
 
+const BATCH_SIZE = 200
+
 export async function importDocentes(docentes: Docente[]): Promise<{ count: number; errors: number }> {
   if (!supabaseReady) throw new Error('Supabase no configurado')
-  const rows = docentes.map((d) => ({
-    dni: d.dni.trim(),
-    apellidos_nombres: d.apellidosNombres.trim(),
-    campus: d.campus?.trim() ?? null,
-    facultad: d.facultad?.trim() ?? null,
-    escuela_profesional: d.escuelaProfesional?.trim() ?? null,
-  }))
 
-  const { data, error } = await supabase
-    .from('docentes')
-    .upsert(rows, { onConflict: 'dni' })
-    .select()
+  // Deduplicar por DNI: el Excel puede tener el mismo docente en varias filas
+  // (una por asignatura). Conservamos la primera aparición de cada DNI.
+  const seen = new Set<string>()
+  const rows = docentes
+    .map((d) => ({
+      dni:                 d.dni.trim(),
+      apellidos_nombres:   d.apellidosNombres.trim(),
+      campus:              d.campus?.trim()            ?? null,
+      facultad:            d.facultad?.trim()           ?? null,
+      escuela_profesional: d.escuelaProfesional?.trim() ?? null,
+    }))
+    .filter((r) => {
+      if (!r.dni || seen.has(r.dni)) return false
+      seen.add(r.dni)
+      return true
+    })
 
-  if (error) throw new Error(error.message)
+  // Procesar en lotes para evitar payloads demasiado grandes
+  let totalCount = 0
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE)
+    const { data, error } = await supabase
+      .from('docentes')
+      .upsert(batch, { onConflict: 'dni' })
+      .select()
 
-  return { count: data?.length ?? 0, errors: 0 }
+    if (error) throw new Error(error.message)
+    totalCount += data?.length ?? 0
+  }
+
+  return { count: totalCount, errors: 0 }
 }
 
 export async function getDocentes(page = 1, pageSize = 50, search = '') {
@@ -52,9 +71,7 @@ export async function getDocentes(page = 1, pageSize = 50, search = '') {
     .range(from, to)
 
   if (search.trim()) {
-    query = query.or(
-      `dni.ilike.%${search}%,apellidos_nombres.ilike.%${search}%`
-    )
+    query = query.or(`dni.ilike.%${search}%,apellidos_nombres.ilike.%${search}%`)
   }
 
   const { data, count, error } = await query
