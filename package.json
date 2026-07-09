@@ -12,7 +12,11 @@
     "lint": "run-s \"lint:*\"",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/"
+    "format": "prettier --write --experimental-cli src/",
+    "db:link": "supabase link --project-ref nwluzgycjlmrjljolhyg",
+    "db:push": "supabase db push",
+    "db:migration": "supabase migration new",
+    "db:status": "supabase migration list"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.109.0",
@@ -37,6 +41,7 @@
     "npm-run-all2": "^9.0.2",
     "oxlint": "~1.69.0",
     "prettier": "3.8.4",
+    "supabase": "^2.109.1",
     "typescript": "~6.0.0",
     "vite": "^8.0.16",
     "vite-plugin-vue-devtools": "^8.1.2",
